@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import tensorflow as tf
 from scipy.stats import pearsonr
+import tqdm
 
 # Load the Inception model
 model = tf.keras.applications.InceptionV3(include_top=False, weights='imagenet', pooling='avg')
@@ -26,7 +27,7 @@ image_folder = 'C:\\Users\\tomei\\Documents\\Python\\Internship\\test_week_3\\bl
 
 # Extract features and metadata
 features = []
-for img_name in os.listdir(image_folder):
+for img_name in tqdm(os.listdir(image_folder), desc="Processing Images", unit="image"):
     img_path = os.path.join(image_folder, img_name)
     match = pattern.match(img_name)
     if match:
