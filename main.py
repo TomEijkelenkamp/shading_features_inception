@@ -8,6 +8,7 @@ from scipy.stats import pearsonr
 # Load the Inception model
 model = tf.keras.applications.InceptionV3(include_top=False, weights='imagenet', pooling='avg')
 
+
 # Function to preprocess images
 def preprocess_image(image_path):
     img = tf.keras.preprocessing.image.load_img(image_path, target_size=(299, 299))
@@ -23,7 +24,7 @@ metadata_list = []
 pattern = re.compile(r'render_(\w+)_c(\d+)_m(\d+)_r(\d+)_a(\d+)_l(\d+)')
 
 # Directory where your images are stored
-image_folder = 'C:\\Users\\tomei\\Documents\\Python\\Internship\\test_week_3\\blender_images\\generated_renders\\shading_properties_3'
+image_folder = ''
 
 # Extract features and metadata
 features = []
@@ -48,22 +49,24 @@ for img_name in tqdm(os.listdir(image_folder), desc="Processing Images", unit="i
 # Convert metadata list to DataFrame
 metadata = pd.DataFrame(metadata_list)
 
-# Convert categorical 'shape' column to numerical form
-metadata = pd.get_dummies(metadata, columns=['shape'])
+# Convert categorical columns ('shape', 'color_index', 'light_position_index') to numerical form
+categorical_columns = ['shape', 'color_index', 'light_position_index']
+metadata = pd.get_dummies(metadata, columns=categorical_columns)
 
 # Convert feature list to DataFrame
 features_df = pd.DataFrame(features)
 
-# Calculate correlation only for numeric data
-correlations = pd.DataFrame(index=metadata.columns[:-1], columns=features_df.columns)  # Exclude 'file_name'
-for meta_col in metadata.columns[:-1]:
-    if pd.api.types.is_numeric_dtype(metadata[meta_col]):
-        for feature_col in features_df.columns:
+# Initialize the correlations DataFrame with the right dimensions
+correlations = pd.DataFrame(index=features_df.columns, columns=metadata.columns)
+
+for feature_col in features_df.columns:
+    for meta_col in metadata.columns:
+        if pd.api.types.is_numeric_dtype(metadata[meta_col]):
             correlation, _ = pearsonr(metadata[meta_col], features_df[feature_col])
-            correlations.loc[meta_col, feature_col] = correlation
+            correlations.at[feature_col, meta_col] = correlation
 
 # Print correlations
 print(correlations)
 
 # Save correlations to CSV file
-correlations.to_csv('shading_feature_correlations.csv', sep=';')
+correlations.to_csv('feature_metadata_correlations.csv', sep=';')
